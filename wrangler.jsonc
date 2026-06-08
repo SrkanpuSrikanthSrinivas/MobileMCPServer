@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mobilemcp-broker",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      { "name": "MOBILE_MCP", "class_name": "MobileMcp" },
+      { "name": "RUNNER_HUB", "class_name": "RunnerHub" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["MobileMcp", "RunnerHub"] }
+  ],
+  "vars": { "MOBILEMCP_TIMEOUT": "120" },
+  "observability": { "enabled": true }
+}
