@@ -209,7 +209,11 @@ export class MobileMcp extends McpAgent<Env> {
   }
 }
 
-const mcpHandler = MobileMcp.serve("/mcp", { binding: "MOBILE_MCP" });
+// Serve BOTH transports so any MCP client works regardless of which it picks:
+//   /mcp           -> Streamable HTTP (current spec, preferred)
+//   /sse, /sse/message -> SSE (older clients / fallback)
+const httpHandler = MobileMcp.serve("/mcp", { binding: "MOBILE_MCP" });
+const sseHandler = MobileMcp.serveSSE("/sse", { binding: "MOBILE_MCP" });
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -221,6 +225,16 @@ export default {
       const room = url.searchParams.get("room") ?? "default";
       return hub(env, room).fetch(request);
     }
-    return mcpHandler.fetch(request, env, ctx);
+    if (url.pathname === "/mcp") {
+      return httpHandler.fetch(request, env, ctx);
+    }
+    if (url.pathname === "/sse" || url.pathname === "/sse/message") {
+      return sseHandler.fetch(request, env, ctx);
+    }
+    return new Response(
+      "mobilemcp broker is running. Point an MCP client at /mcp (Streamable HTTP) " +
+        "or /sse (SSE). This URL is not meant to be opened in a browser.",
+      { status: 404 }
+    );
   },
 };
